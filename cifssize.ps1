@@ -11,8 +11,10 @@ function DisplayInBytes($num)
     "{0:N1} {1}" -f $num, $suffix[$index]
 }
 
-# Init table
+# Init tables
 $data = @()
+$output_data = @()
+$excel_data  = @()
 
 # Get the list of shares
 $UNCPaths = Get-Content junction_points.txt | Select-Object
