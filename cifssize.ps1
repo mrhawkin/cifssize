@@ -12,7 +12,6 @@ function DisplayInBytes($num)
 }
 
 # Init tables
-$data = @()
 $output_data = @()
 $excel_data  = @()
 
