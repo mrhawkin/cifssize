@@ -11,7 +11,7 @@ function DisplayInBytes($num)
     "{0:N1} {1}" -f $num, $suffix[$index]
 }
 
-# Init tables
+# Init table
 $output_data = @()
 $excel_data  = @()
 
@@ -62,7 +62,54 @@ foreach ($path in $UNCPaths) {
 
 $output_data | ForEach {[PSCustomObject]$_} | Format-Table -AutoSize
 
-# Write to CSV file
-# $excel_data | Export-Csv -Path "usagedata.csv" -NoTypeInformation
+# Grupper etter første del av Path.
+# Eksempel: "gruppe1\område\share" -> "gruppe1"
+$gruppe_data = $excel_data |
+    Group-Object {
+        ($_.Path.TrimStart('\', '/') -split '[\\/]')[0]
+    } |
+    ForEach-Object {
+        [pscustomobject]@{
+            Gruppe         = $_.Name
+            'Brukt TB'     = [math]::Round(
+                ($_.Group | Measure-Object -Property Used -Sum).Sum, 1
+            )
+            'Totalt TB'    = [math]::Round(
+                ($_.Group | Measure-Object -Property Total -Sum).Sum, 1
+            )
+        }
+    } |
+    Sort-Object Gruppe
+
+$gruppe_data = @($gruppe_data)
+
+$gruppe_data += [pscustomobject]@{
+    Gruppe      = 'TOTALT'
+    'Brukt TB'  = [math]::Round(
+        ($gruppe_data | Measure-Object -Property 'Brukt TB' -Sum).Sum, 1
+    )
+    'Totalt TB' = [math]::Round(
+        ($gruppe_data | Measure-Object -Property 'Totalt TB' -Sum).Sum, 1
+    )
+}
+
 $filename = "usagedata_$(Get-Date -Format 'yyyy-MM').xlsx"
-$excel_data | Export-Excel -Path $filename -AutoSize -TableName table -TableStyle Medium6 -FreezeTopRow
+Write-Host "Eksporterer til: $filename"
+
+$excel_data | Export-Excel `
+    -Path $filename `
+    -WorksheetName 'Detaljer' `
+    -AutoSize `
+    -TableName 'UsageDetails' `
+    -TableStyle Medium6 `
+    -FreezeTopRow `
+    -ClearSheet
+
+$gruppe_data | Export-Excel `
+    -Path $filename `
+    -WorksheetName 'Per gruppe' `
+    -AutoSize `
+    -TableName 'UsageGroups' `
+    -TableStyle Medium6 `
+    -FreezeTopRow `
+    -ClearSheet
