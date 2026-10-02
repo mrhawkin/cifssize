@@ -63,4 +63,5 @@ $output_data | ForEach {[PSCustomObject]$_} | Format-Table -AutoSize
 
 # Write to CSV file
 # $excel_data | Export-Csv -Path "usagedata.csv" -NoTypeInformation
-$excel_data | Export-Excel -Path "usagedata.xlsx" -AutoSize -TableName table -TableStyle Medium6 -FreezeTopRow
+$filename = "usagedata_$(Get-Date -Format 'yyyy-MM').xlsx"
+$excel_data | Export-Excel -Path $filename -AutoSize -TableName table -TableStyle Medium6 -FreezeTopRow
